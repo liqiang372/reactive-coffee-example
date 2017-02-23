@@ -5,6 +5,15 @@
   <meta charset="UTF-8">
   <title>Document</title>
   <style>
+    .selected .list-filename {
+      color: tomato;
+    }
+    
+    .list-filename {
+      font-weight: bold;
+      display: block;
+    }
+    
     .sidebar {
       width: 200px;
       position: absolute;
@@ -12,6 +21,12 @@
     
     .preview {
       margin-left: 300px;
+    }
+    
+    .preview pre {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+      padding-right: 10px;
     }
     
     .preview pre code {

@@ -6,6 +6,11 @@
 
   rx.rxt.importTags();
 
+
+  /*
+   * Basic Data Type
+   */
+
   Gist = (function() {
     function Gist(id, desc, files) {
       this.id = id;
@@ -16,6 +21,11 @@
     return Gist;
 
   })();
+
+
+  /*
+   * Component
+   */
 
   sidebar = function(args) {
     var currentGist, gists;
@@ -30,10 +40,27 @@
           click: function() {
             return currentGist.set(g);
           }
-        }, g.desc);
+        }, (function() {
+          var keys;
+          keys = Object.keys(g.files);
+          return [
+            p({}, [
+              span({
+                "class": 'list-filename'
+              }, g.files[keys[0]].filename), br(), span({
+                "class": 'list-filedesc'
+              }, g.desc)
+            ])
+          ];
+        })());
       }))
     ]);
   };
+
+
+  /*
+   * Component
+   */
 
   preview = function(args) {
     var currentGist, gists;
@@ -73,7 +100,7 @@
                 }
               }, fileName), pre({}, [
                 $code = code({
-                  "class": "" + (file.language.toLowerCase())
+                  "class": "" + (file.language != null ? file.language.toLowerCase() : void 0)
                 }, bind(function() {
                   return fileContent.get();
                 }))
@@ -86,44 +113,87 @@
     ]);
   };
 
+
+  /*
+   * Root Entry
+   */
+
   main = function(args) {
-    var $base, currentGist, gistsAll, loadFromGithub;
+    var $base, currentGist, displayName, err, fetching, gistsAll, loadFromGithub;
     gistsAll = rx.array([]);
     currentGist = rx.cell("loading...", "loading", {
       "filename": {
         "language": "javascript"
       }
     });
-    loadFromGithub = function() {
+    fetching = rx.cell(false);
+    err = rx.cell(false);
+    displayName = rx.cell('');
+    loadFromGithub = function(name) {
+      fetching.set(true);
+      err.set(false);
+      displayName.set(name);
       return $.ajax({
-        url: 'https://api.github.com/users/drbelfast/gists',
+        url: "https://api.github.com/users/" + name + "/gists",
         success: function(data) {
           gistsAll.replace(data.map(function(g) {
             return new Gist(g.id, g.description, g.files);
           }));
           return currentGist.set(gistsAll.at(0));
+        },
+        error: function() {
+          return err.set(true);
+        },
+        "finally": function() {
+          return fetching.set(false);
         }
       });
     };
-    loadFromGithub();
+    loadFromGithub('drbelfast');
     $base = div({
       "class": 'hi'
     }, [
-      h1('hello'), h2({}, bind(function() {})), div({
+      h1('hello'), div({}, [
+        input({
+          type: 'text',
+          placeholder: 'type username',
+          autofocus: true,
+          keydown: function(e) {
+            var name;
+            if (e.which === 13) {
+              name = this.val().trim();
+              if (name.length === 0) {
+                return;
+              }
+              return loadFromGithub(name);
+            }
+          }
+        })
+      ]), p({}, bind(function() {
+        return (displayName.get()) + "'s gists";
+      })), div({
         "class": 'container'
       }, bind(function() {
-        if (gistsAll.length() > 0) {
-          return [
-            sidebar({
-              gists: gistsAll,
-              currentGist: currentGist
-            }), preview({
-              gists: gistsAll,
-              currentGist: currentGist
-            })
-          ];
+        if (err.get()) {
+          return [div('no user exists')];
         } else {
-          return [div({}, 'Loading...')];
+          if (gistsAll.length() > 0) {
+            return [
+              sidebar({
+                gists: gistsAll,
+                currentGist: currentGist
+              }), preview({
+                gists: gistsAll,
+                currentGist: currentGist
+              })
+            ];
+          } else {
+            if (fetching.get()) {
+              return [div({}, 'fetching...')];
+            } else {
+              return [div({}, '')];
+            }
+          }
         }
       }))
     ]);
