@@ -1,6 +1,19 @@
 bind = rx.bind
 rx.rxt.importTags()
 
+###
+# Utility
+###
+store = {
+  key: 'gists-auth'
+  get: ->
+    localStorage.getItem(this.key)
+  set: (val) ->
+    localStorage.setItem(this.key, val)
+  remove: ->
+    delete localStorage[this.key]
+}
+
 
 ###
 # Basic Data Type
@@ -64,6 +77,33 @@ preview = (args) ->
 
 
 ###
+# Component
+###
+isToken = rx.cell(store.get()?)
+loggedIn = bind -> isToken.get()
+
+login = (args) ->
+  div {class: 'auth-section'}, bind ->
+    if not loggedIn.get()
+      [
+        $input = input {type: 'text', placeholder: 'paste your token here'}
+        ' '
+        a {
+          href: "#"
+          click: ->
+            val = $input.rx('val').get()
+            store.set(val)
+            isToken.set(true)
+        }, 'login'
+      ]
+    else
+      a {
+        href: '#'
+        click: ->
+          store.remove()
+          isToken.set(false)
+      }, 'logout'
+###
 # Root Entry
 ###
 main = (args) ->
@@ -91,7 +131,10 @@ main = (args) ->
   loadFromGithub('drbelfast')
   
   $base = div {class: 'hi'}, [
-    h1 'hello'
+    h2 'Auth'
+    login {}
+    hr()
+    h2 bind -> if loggedIn.get() then 'Private Panel' else 'Public Interface'
     div {}, [
       input {
         type: 'text'
@@ -124,3 +167,6 @@ main = (args) ->
 
 ## Start Everything
 $('body').append(main)
+
+
+
