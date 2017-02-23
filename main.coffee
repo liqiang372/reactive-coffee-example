@@ -234,28 +234,52 @@ gistsAll = rx.array raw_gists.map (g) ->
   new Gist(g.id, g.description, g.files)
 
 currentGist = rx.cell(gistsAll.at(0))
-$('body').append(
-  div {class: 'container'}, [
-    div {class: 'sidebar'}, [
-      ul {}, gistsAll.map (g) ->
-        li {class: "#{if g == currentGist.get() then 'selected'}", click: -> currentGist.set(g)}, g.desc
-    ]
-    div {class: 'preview'}, [
-      h3 {}, bind -> currentGist.get().desc
-      div {}, bind ->
-        for fileName, file of currentGist.get().files
-          do(fileName, file) ->
-            # need separate fileContent for each file
-            fileContent = rx.cell('')
-            $.ajax({
-              url: file.raw_url,
-              success: (data) ->
-                fileContent.set(data)
-            })
-            div {}, [
-              pre {}, fileName
-              code {}, bind -> fileContent.get()
-            ]
-    ]
+# $('body').append(
+#   div {class: 'container'}, [
+#     div {class: 'sidebar'}, [
+#       ul {}, gistsAll.map (g) ->
+#         li {class: "#{if g == currentGist.get() then 'selected'}", click: -> currentGist.set(g)}, g.desc
+#     ]
+#     div {class: 'preview'}, [
+#       h3 {}, bind -> currentGist.get().desc
+#       div {}, bind ->
+#         for fileName, file of currentGist.get().files
+#           do(fileName, file) ->
+#             # need separate fileContent for each file
+#             fileContent = rx.cell('')
+#             $.ajax({
+#               url: file.raw_url,
+#               success: (data) ->
+#                 fileContent.set(data)
+#             })
+#             div {}, [
+#               pre {}, fileName
+#               code {}, bind -> fileContent.get()
+#             ]
+#     ]
+#   ]
+# )
+
+
+main = (args) ->
+  gistsAll = rx.array([])
+  loadFromGithub = ->
+    $.ajax({
+      url: 'https://api.github.com/users/drbelfast/gists',
+      success: (data) -> gistsAll.replace(data.map (g) -> new Gist(g.id, g.description, g.files)) 
+    })
+  
+  loadFromGithub()
+  
+  $base = div {class: 'hi'}, [
+    h1 'hello'
+    div {}, bind ->
+      if gistsAll.length() > 0 then [
+        div {}, 'yes'
+      ] else [
+        div {}, 'no'
+      ]
   ]
-)
+  $base
+
+$('body').append(main)
