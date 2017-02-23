@@ -228,10 +228,10 @@ raw_gists = [
   }
 ]
 class Gist
-  constructor: (@id, @desc, @content) ->
+  constructor: (@id, @desc, @files) ->
 
 gistsAll = rx.array raw_gists.map (g) ->
-  new Gist(g.id, g.description, g.comments_url)
+  new Gist(g.id, g.description, g.files)
 
 currentGist = rx.cell(gistsAll.at(0))
 $('body').append(
@@ -242,7 +242,12 @@ $('body').append(
     ]
     div {class: 'preview'}, [
       h3 {}, bind -> currentGist.get().desc
-      pre {}, bind -> currentGist.get().content
+      div {}, bind ->
+        for file, value of currentGist.get().files
+          div {}, [
+            pre {}, file
+            code {}, value.raw_url
+          ]
     ]
   ]
 )

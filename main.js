@@ -231,10 +231,10 @@
   ];
 
   Gist = (function() {
-    function Gist(id, desc, content) {
+    function Gist(id, desc, files) {
       this.id = id;
       this.desc = desc;
-      this.content = content;
+      this.files = files;
     }
 
     return Gist;
@@ -242,7 +242,7 @@
   })();
 
   gistsAll = rx.array(raw_gists.map(function(g) {
-    return new Gist(g.id, g.description, g.comments_url);
+    return new Gist(g.id, g.description, g.files);
   }));
 
   currentGist = rx.cell(gistsAll.at(0));
@@ -266,8 +266,15 @@
     }, [
       h3({}, bind(function() {
         return currentGist.get().desc;
-      })), pre({}, bind(function() {
-        return currentGist.get().content;
+      })), div({}, bind(function() {
+        var file, ref, results, value;
+        ref = currentGist.get().files;
+        results = [];
+        for (file in ref) {
+          value = ref[file];
+          results.push(div({}, [pre({}, file), code({}, value.raw_url)]));
+        }
+        return results;
       }))
     ])
   ]));
