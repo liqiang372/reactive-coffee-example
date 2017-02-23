@@ -51,7 +51,7 @@
         for (fileName in ref) {
           file = ref[fileName];
           results.push((function(fileName, file) {
-            var fileContent;
+            var $code, fileContent;
             fileContent = rx.cell('');
             fileContent.onSet.sub(function() {
               return setTimeout(function() {
@@ -67,8 +67,12 @@
               }
             });
             return div({}, [
-              i({}, fileName), pre({}, [
-                code({
+              i({
+                click: function() {
+                  return $code.slideToggle('fast');
+                }
+              }, fileName), pre({}, [
+                $code = code({
                   "class": "" + (file.language.toLowerCase())
                 }, bind(function() {
                   return fileContent.get();

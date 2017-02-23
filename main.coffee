@@ -34,9 +34,9 @@ preview = (args) ->
             success: (data) -> fileContent.set(data)
           })
           div {}, [
-            i {}, fileName
+            i {click: -> $code.slideToggle('fast')}, fileName
             pre {}, [
-              code {class: "#{file.language.toLowerCase()}"}, bind -> fileContent.get()
+              $code = code {class: "#{file.language.toLowerCase()}"}, bind -> fileContent.get()
             ]
           ]
   ]
