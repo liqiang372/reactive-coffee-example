@@ -53,6 +53,13 @@
           results.push((function(fileName, file) {
             var fileContent;
             fileContent = rx.cell('');
+            fileContent.onSet.sub(function() {
+              return setTimeout(function() {
+                return $('pre code').each(function(i, block) {
+                  return hljs.highlightBlock(block);
+                });
+              }, 0);
+            });
             $.ajax({
               url: file.raw_url,
               success: function(data) {
@@ -60,9 +67,13 @@
               }
             });
             return div({}, [
-              pre({}, fileName), code({}, bind(function() {
-                return fileContent.get();
-              }))
+              i({}, fileName), pre({}, [
+                code({
+                  "class": "" + (file.language.toLowerCase())
+                }, bind(function() {
+                  return fileContent.get();
+                }))
+              ])
             ]);
           })(fileName, file));
         }
@@ -72,15 +83,21 @@
   };
 
   main = function(args) {
-    var $base, gistsAll, loadFromGithub;
+    var $base, currentGist, gistsAll, loadFromGithub;
     gistsAll = rx.array([]);
+    currentGist = rx.cell("loading...", "loading", {
+      "filename": {
+        "language": "javascript"
+      }
+    });
     loadFromGithub = function() {
       return $.ajax({
         url: 'https://api.github.com/users/drbelfast/gists',
         success: function(data) {
-          return gistsAll.replace(data.map(function(g) {
+          gistsAll.replace(data.map(function(g) {
             return new Gist(g.id, g.description, g.files);
           }));
+          return currentGist.set(gistsAll.at(0));
         }
       });
     };
@@ -88,12 +105,10 @@
     $base = div({
       "class": 'hi'
     }, [
-      h1('hello'), div({
+      h1('hello'), h2({}, bind(function() {})), div({
         "class": 'container'
       }, bind(function() {
-        var currentGist;
         if (gistsAll.length() > 0) {
-          currentGist = rx.cell(gistsAll.at(0));
           return [
             sidebar({
               gists: gistsAll,

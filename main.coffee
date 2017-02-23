@@ -24,31 +24,42 @@ preview = (args) ->
       for fileName, file of currentGist.get().files
         do (fileName, file) ->
           fileContent = rx.cell('')
+          # highlight code at the end of updating
+          fileContent.onSet.sub () ->
+            setTimeout ->
+              $('pre code').each (i, block) -> hljs.highlightBlock(block)
+            , 0
           $.ajax({
             url: file.raw_url,
             success: (data) -> fileContent.set(data)
           })
           div {}, [
-            pre {}, fileName
-            code {}, bind -> fileContent.get()
+            i {}, fileName
+            pre {}, [
+              code {class: "#{file.language.toLowerCase()}"}, bind -> fileContent.get()
+            ]
           ]
   ]
 
 main = (args) ->
   gistsAll = rx.array([])
+  ## need to provide a placeholder value here to avoid multiple dependency updates
+  currentGist = rx.cell("loading...", "loading", {"filename": {"language": "javascript"}})
   loadFromGithub = ->
     $.ajax({
       url: 'https://api.github.com/users/drbelfast/gists',
-      success: (data) -> gistsAll.replace(data.map (g) -> new Gist(g.id, g.description, g.files)) 
+      success: (data) -> 
+        gistsAll.replace(data.map (g) -> new Gist(g.id, g.description, g.files))
+        currentGist.set(gistsAll.at(0))
     })
   
   loadFromGithub()
   
   $base = div {class: 'hi'}, [
     h1 'hello'
+    h2 {}, bind ->
     div {class: 'container'}, bind ->
       if gistsAll.length() > 0
-        currentGist = rx.cell(gistsAll.at(0))
         [
           sidebar {gists: gistsAll, currentGist: currentGist}
           preview {gists: gistsAll, currentGist: currentGist}
