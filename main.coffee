@@ -243,11 +243,19 @@ $('body').append(
     div {class: 'preview'}, [
       h3 {}, bind -> currentGist.get().desc
       div {}, bind ->
-        for file, value of currentGist.get().files
-          div {}, [
-            pre {}, file
-            code {}, value.raw_url
-          ]
+        for fileName, file of currentGist.get().files
+          do(fileName, file) ->
+            # need separate fileContent for each file
+            fileContent = rx.cell('')
+            $.ajax({
+              url: file.raw_url,
+              success: (data) ->
+                fileContent.set(data)
+            })
+            div {}, [
+              pre {}, fileName
+              code {}, bind -> fileContent.get()
+            ]
     ]
   ]
 )

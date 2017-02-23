@@ -267,12 +267,26 @@
       h3({}, bind(function() {
         return currentGist.get().desc;
       })), div({}, bind(function() {
-        var file, ref, results, value;
+        var file, fileName, ref, results;
         ref = currentGist.get().files;
         results = [];
-        for (file in ref) {
-          value = ref[file];
-          results.push(div({}, [pre({}, file), code({}, value.raw_url)]));
+        for (fileName in ref) {
+          file = ref[fileName];
+          results.push((function(fileName, file) {
+            var fileContent;
+            fileContent = rx.cell('');
+            $.ajax({
+              url: file.raw_url,
+              success: function(data) {
+                return fileContent.set(data);
+              }
+            });
+            return div({}, [
+              pre({}, fileName), code({}, bind(function() {
+                return fileContent.get();
+              }))
+            ]);
+          })(fileName, file));
         }
         return results;
       }))
